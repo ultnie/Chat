@@ -91,7 +91,7 @@ public class ChatWindow {
                     public void keyPressed(KeyEvent e) {
                         if (e.getKeyCode() == KeyEvent.VK_ENTER){
                             if(!messageWindow.getText().trim().equals("")) {
-                                //client.writeMessage(messageWindow.getText());
+                                client.writeMessage(messageWindow.getText());
                                 messageWindow.setText("");
                             }
                             e.consume();
@@ -105,7 +105,7 @@ public class ChatWindow {
 
         sendMessage.addActionListener(e -> {
             if(!messageWindow.getText().trim().equals("")) {
-                //client.writeMessage(messageWindow.getText().trim());
+                client.writeMessage(messageWindow.getText().trim());
                 messageWindow.setText("");
             }
         });
