@@ -20,7 +20,7 @@ public class ChatWindow {
     private JTextArea users;
 
     public void openChat() {
-        this.frame = new JFrame();
+        frame = new JFrame();
         GridBagLayout grid = new GridBagLayout();
         GridBagConstraints gbc = new GridBagConstraints();
         frame.setLayout(grid);

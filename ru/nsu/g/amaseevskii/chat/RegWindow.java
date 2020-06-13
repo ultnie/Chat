@@ -4,6 +4,7 @@ import ru.nsu.g.amaseevskii.chat.Serialized.Client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
@@ -14,7 +15,7 @@ public class RegWindow {
     private String name;
     private Client client;
 
-    public void RegWindow(Client client){
+    public RegWindow(Client client){
         this.client = client;
     }
 
@@ -69,21 +70,23 @@ public class RegWindow {
             if (!Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$")
                     .matcher(ip.getText().trim())
                     .matches()) {
-                ipLabel.setText("Enter a valid IP address.");
+                ipLabel.setText("Enter a valid IP address");
             } else if (name.getText().trim().equals("")) {
-                nameLabel.setText("Enter your name.");
+                nameLabel.setText("Enter username");
             } else {
                 try {
                     Integer.parseInt(port.getText().trim());
-                    //client.connect(ip.getText().trim(), Integer.parseInt(port.getText().trim()));
+                    client.connect(ip.getText().trim(), Integer.parseInt(port.getText().trim()));
                     frame.setVisible(false);
                     ChatWindow cw = new ChatWindow(client);
-                    //client.registration(name.getText().trim(), cw.getUsers(), cw.getChat());
+                    client.registration(name.getText().trim(), cw.getUsers(), cw.getChat());
                     cw.launchChat();
                 } catch (NumberFormatException e1) {
-                    portLabel.setText("Enter a correct port number.");
+                    portLabel.setText("Enter a correct port number");
                 } catch (ExceptionInInitializerError e1) {
                     status.setText("Can`t connect to server!");
+                } catch (InterruptedException | IOException interruptedException) {
+                    interruptedException.printStackTrace();
                 }
             }
         });
