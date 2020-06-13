@@ -1,7 +1,8 @@
 package ru.nsu.g.amaseevskii.chat;
 
+import ru.nsu.g.amaseevskii.chat.Serialized.Client;
+
 import javax.swing.*;
-import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -9,9 +10,9 @@ import java.awt.event.KeyListener;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class ChatWindow {
-    //private Client client;
-    ChatWindow(/*Client client*/) {
-        //this.client = client;
+    private Client client;
+    ChatWindow(Client client) {
+        this.client = client;
         openChat();
     }
     private JFrame frame;
@@ -59,6 +60,19 @@ public class ChatWindow {
         frame.add(writeHere, gbc);
         messageWindow.setLineWrap(true);
 
+        //user list
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 3;
+        gbc.gridy = 0;
+        this.users = new JTextArea(25, 20);
+        JScrollPane cp = new JScrollPane(users);
+        cp.setAutoscrolls(false);
+        cp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        cp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        users.setLineWrap(true);
+        frame.add(cp, gbc);
+        users.setEditable(false);
+
         //button
         gbc.ipady = 30;
         gbc.ipadx = 60;
@@ -67,8 +81,6 @@ public class ChatWindow {
         gbc.gridwidth = 1;
         gbc.gridy = 1;
         JButton sendMessage = new JButton("Send");
-
-        //add user list later
 
         messageWindow.addKeyListener(
                 new KeyListener() {

@@ -1,5 +1,7 @@
 package ru.nsu.g.amaseevskii.chat;
 
+import ru.nsu.g.amaseevskii.chat.Serialized.Client;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.regex.Pattern;
@@ -10,12 +12,12 @@ public class RegWindow {
     private int port;
     private String ip;
     private String name;
-//    private Client client;
-/*
+    private Client client;
+
     public void RegWindow(Client client){
         this.client = client;
     }
-*/
+
     public void startReg(){
         JFrame frame = new JFrame();
         GridBagLayout grid = new GridBagLayout();
@@ -75,12 +77,11 @@ public class RegWindow {
                     Integer.parseInt(port.getText().trim());
                     //client.connect(ip.getText().trim(), Integer.parseInt(port.getText().trim()));
                     frame.setVisible(false);
-                    ChatWindow cw = new ChatWindow(/*client*/);
+                    ChatWindow cw = new ChatWindow(client);
                     //client.registration(name.getText().trim(), cw.getUsers(), cw.getChat());
                     cw.launchChat();
                 } catch (NumberFormatException e1) {
                     portLabel.setText("Enter a correct port number.");
-                    //return;
                 } catch (ExceptionInInitializerError e1) {
                     status.setText("Can`t connect to server!");
                 }
