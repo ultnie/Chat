@@ -8,7 +8,7 @@ public class Message implements Serializable {
     private final String message;
     private String source;
     private final String date;
-    private String type;
+    private final String type;
 
     public Message(String type, String msg) {
         this.type = type;

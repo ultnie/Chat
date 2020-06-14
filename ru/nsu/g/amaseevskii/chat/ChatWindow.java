@@ -10,7 +10,7 @@ import java.awt.event.KeyListener;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class ChatWindow {
-    private Client client;
+    private final Client client;
     ChatWindow(Client client) {
         this.client = client;
         openChat();

@@ -10,7 +10,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class Client implements IClient {
-    private Socket mySocket;
     private String clientName;
     private ObjectInputStream fromServer;
     private ObjectOutputStream toServer;
@@ -23,7 +22,7 @@ public class Client implements IClient {
 
     public void connect (String ip, Integer port){
         try {
-            mySocket = new Socket(ip, port);
+            Socket mySocket = new Socket(ip, port);
             toServer = new ObjectOutputStream(mySocket.getOutputStream());
             fromServer = new ObjectInputStream(mySocket.getInputStream());
         } catch (IOException e) {
@@ -31,19 +30,6 @@ public class Client implements IClient {
             throw new ExceptionInInitializerError("Can`t connect!");
         }
     }
-
-    public Client(String ip, Integer port) {
-        try {
-            mySocket = new Socket(ip, port);
-            toServer = new ObjectOutputStream(mySocket.getOutputStream());
-            fromServer = new ObjectInputStream(mySocket.getInputStream());
-            otherClients = new ArrayList<>();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            throw new ExceptionInInitializerError("Can`t connect!");
-        }
-    }
-
 
     public void registration(String name, JTextArea users, JTextArea chat) throws IOException, InterruptedException {
         clientName = name;

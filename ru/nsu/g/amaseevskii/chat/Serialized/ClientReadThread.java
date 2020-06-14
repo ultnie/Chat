@@ -7,9 +7,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ClientReadThread extends Thread {
-    private ObjectInputStream fromServer;
-    private JTextArea chat;
-    private JTextArea users;
+    private final ObjectInputStream fromServer;
+    private final JTextArea chat;
+    private final JTextArea users;
     private boolean success;
     private ArrayList<String> otherClients;
 
@@ -28,12 +28,18 @@ public class ClientReadThread extends Thread {
             try {
                 message = (Message) fromServer.readObject();
                 switch (message.getType()) {
-                    case "Connection close":
+                    case "Disconnect":
                         otherClients.remove(message.getSource());
                         users.setText("");
                         for (String user : otherClients)
                             users.append(user + "\n");
                         chat.append(message.getSource() + " has left\n");
+                    case "Disconnect by timeout":
+                        otherClients.remove(message.getSource());
+                        users.setText("");
+                        for (String user : otherClients)
+                            users.append(user + "\n");
+                        chat.append(message.getSource() + " disconnected by timeout\n");
                     case "Success":
                         synchronized (this) {
                             success = true;
@@ -50,7 +56,7 @@ public class ClientReadThread extends Thread {
                         chat.append(message.getDate() + " " + message.getSource() + ": " + message.getMessage() + "\n");
                         break;
                     case "Registration":
-                        chat.append(message.getSource() + "connected to chat" + "\n");
+                        chat.append(message.getSource() + " connected to chat" + "\n");
                         otherClients.add(message.getSource());
                         users.setText("");
                         for (String user : otherClients)
