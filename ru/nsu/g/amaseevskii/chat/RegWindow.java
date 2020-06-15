@@ -13,9 +13,9 @@ public class RegWindow {
     private int port;
     private String ip;
     private String name;
-    private Client client;
+    private IClient client;
 
-    public RegWindow(Client client){
+    public RegWindow(IClient client){
         this.client = client;
     }
 

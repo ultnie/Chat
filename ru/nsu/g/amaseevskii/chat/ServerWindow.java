@@ -15,7 +15,11 @@ public class ServerWindow {
 
     JFrame frame;
     JTextArea info;
-    Server server;
+    IServer server;
+
+    public ServerWindow(IServer server) {
+        this.server=server;
+    }
 
     public void StartServer() {
         frame = new JFrame();
@@ -37,6 +41,6 @@ public class ServerWindow {
         frame.add(info);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        server = new Server();
+        server.launchServer();
     }
 }

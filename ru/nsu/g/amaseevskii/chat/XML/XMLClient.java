@@ -1,35 +1,37 @@
-package ru.nsu.g.amaseevskii.chat.Serialized;
+package ru.nsu.g.amaseevskii.chat.XML;
 
 import ru.nsu.g.amaseevskii.chat.IClient;
 
 import javax.swing.*;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.HashMap;
 
-public class Client implements IClient {
+public class XMLClient implements IClient {
+
+    private Socket mySocket;
     private String clientName;
-    private ObjectInputStream fromServer;
-    private ObjectOutputStream toServer;
-    private ClientReadThread reader;
-    private ArrayList<String> otherClients;
+    private XMLClientReadThread reader;
+    private MyXMLWriter toServer;
+    private MyXMLReader fromServer;
+    private HashMap<String, String> otherClients;
+    private String USID;
     private Timer timeoutTimer;
     private TimerListener tl;
 
-    Client() {
-        otherClients = new ArrayList<>();
+    XMLClient() {
+        otherClients = new HashMap<>();
     }
 
-    public void connect (String ip, Integer port){
+    public void connect(String ip, Integer port) {
         try {
-            Socket mySocket = new Socket(ip, port);
-            mySocket.setSoTimeout(5000);
-            toServer = new ObjectOutputStream(mySocket.getOutputStream());
-            fromServer = new ObjectInputStream(mySocket.getInputStream());
+            mySocket = new Socket(ip, port);
+            toServer = new MyXMLWriter(mySocket.getOutputStream());
+            fromServer = new MyXMLReader(mySocket.getInputStream());
             tl = new TimerListener();
             timeoutTimer = new Timer(1000, tl);
             timeoutTimer.start();
@@ -39,25 +41,32 @@ public class Client implements IClient {
         }
     }
 
-    public void registration(String name, JTextArea users, JTextArea chat) throws IOException, InterruptedException {
+    @Override
+    public void registration(String name, JTextArea users, JTextArea chat) throws InterruptedException {
         clientName = name;
-        toServer.writeObject(new Message("Registration", clientName, clientName));
-        reader = new ClientReadThread(users, chat, fromServer, otherClients);
+        try {
+            toServer.sendCommandMessage("login", clientName, "Client", "", "");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        reader = new XMLClientReadThread(users, chat, fromServer, otherClients);
         reader.start();
         synchronized (reader) {
             reader.wait();
             if (!reader.isSuccess()) {
                 throw new ExceptionInInitializerError("Registration failed!");
             } else {
-                System.out.println("Registration successful!");
+                USID = reader.getReader().getUSID();
             }
         }
+        System.out.println("Registration successful!");
         getUsers();
     }
 
+    @Override
     public void getUsers() {
         try {
-            toServer.writeObject(new Message("Get user list", "",  clientName));
+            toServer.sendCommandMessage("list", "", "", USID, "");
             synchronized (reader) {
                 reader.wait();
                 if (!reader.isSuccess()) {
@@ -70,16 +79,17 @@ public class Client implements IClient {
         }
     }
 
+    @Override
     public void writeMessage(String message) {
         synchronized (reader) {
             try {
-                toServer.writeObject(new Message("Message", message, clientName));
+                toServer.sendCommandMessage("message", "", "", USID, message);
                 reader.wait();
             } catch (Exception e) {
                 System.exit(0);
             }
             if (!reader.isSuccess()) {
-                throw new ExceptionInInitializerError("Message not delivered!");
+                throw new ExceptionInInitializerError(reader.getReader().getMessage());
             }
         }
     }
@@ -88,11 +98,11 @@ public class Client implements IClient {
         @Override
         public void actionPerformed(final ActionEvent e) {
             try {
-                toServer.writeObject(new Message("Connection check", "",clientName));
+                toServer.sendEventMessage ("connection_check", "", "");
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
         }
     }
-
 }
+

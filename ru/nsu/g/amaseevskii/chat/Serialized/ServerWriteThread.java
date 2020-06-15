@@ -22,7 +22,7 @@ public class ServerWriteThread extends Thread {
     private ArrayDeque<Message> lastMessages;
     private Integer maxLastMessages;
     private Timer timeoutTimer;
-    private TimerListener t1;
+    private TimerListener tl;
     protected int log;
 
     ServerWriteThread(Socket socket, ArrayDeque<Message> lastMessages, ObjectOutputStream toClient,
@@ -33,8 +33,8 @@ public class ServerWriteThread extends Thread {
         this.toClient = toClient;
         this.clients = clients;
         this.log = log;
-        t1 = new TimerListener();
-        timeoutTimer = new Timer(1000, t1);
+        tl = new TimerListener();
+        timeoutTimer = new Timer(1000, tl);
         fromClient = new ObjectInputStream(socket.getInputStream());
         maxLastMessages = 10;
         timeoutTimer.start();

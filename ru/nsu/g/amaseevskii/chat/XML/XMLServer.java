@@ -1,11 +1,10 @@
-package ru.nsu.g.amaseevskii.chat.Serialized;
+package ru.nsu.g.amaseevskii.chat.XML;
 
 import ru.nsu.g.amaseevskii.chat.IServer;
 import ru.nsu.g.amaseevskii.chat.ReadConfig;
 import ru.nsu.g.amaseevskii.chat.ServerLogger;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayDeque;
@@ -14,30 +13,30 @@ import java.util.HashMap;
 
 import static ru.nsu.g.amaseevskii.chat.ServerLogger.serverLogger;
 
-public class Server implements IServer {
+public class XMLServer implements IServer {
     private ServerSocket mainSocket;
-    private ArrayList<String> clients;
-    private ArrayList<ObjectOutputStream> streams;
-    private ArrayDeque<Message> lastMessages;
-    HashMap<String, Integer> config;
     private int port = 8080;
+    private HashMap<String, String> clients;
+    private HashMap<String, Integer> config;
+    private ArrayList<MyXMLWriter> writers;
+    private ArrayDeque<XMLMessage> lastMessages;
     private int log = 0;
     private static final boolean SERVER_IS_ONLINE = true;
 
     public void launchServer() {
-        config = ReadConfig.readConfig();
-        if (config.containsKey("Port"))
-            port=config.get("Port");
-        if (config.containsKey("MakeLog"))
-            log=config.get("MakeLog");
-        if (log == 1)
-            ServerLogger.setLogger();
         try {
+            config = ReadConfig.readConfig();
+            if (config.containsKey("Port"))
+                port=config.get("Port");
+            if (config.containsKey("MakeLog"))
+                log=config.get("MakeLog");
+            if (log == 1)
+                ServerLogger.setLogger();
             mainSocket = new ServerSocket(port, 5000);
-            clients = new ArrayList<>();
-            streams = new ArrayList<>();
+            clients = new HashMap<>();
+            writers = new ArrayList<>();
             lastMessages = new ArrayDeque<>();
-            ServerReadThread reader = new ServerReadThread(lastMessages, streams);
+            XMLServerReadThread reader = new XMLServerReadThread(lastMessages, writers);
             reader.start();
             listen();
         } catch (IOException e) {
@@ -51,17 +50,18 @@ public class Server implements IServer {
         if (log == 1)
             serverLogger.info("Server is online");
         System.out.println("Server is online");
-        ObjectOutputStream oos;
+        MyXMLWriter writer;
         while (SERVER_IS_ONLINE) {
             Socket socket = mainSocket.accept();
+            writer = new MyXMLWriter(socket.getOutputStream());
             socket.setSoTimeout(5000);
-            oos = new ObjectOutputStream(socket.getOutputStream());
-            streams.add(oos);
+            writers.add(writer);
             if (log == 1)
                 serverLogger.info("New client: " + socket.getRemoteSocketAddress().toString());
             System.out.println("New client: " + socket.getRemoteSocketAddress().toString());
-            ServerWriteThread client = new ServerWriteThread(socket, lastMessages, oos, streams, clients, log);
+            XMLServerWriteThread client = new XMLServerWriteThread(socket, lastMessages, writer, writers, clients);
             client.start();
         }
     }
+
 }

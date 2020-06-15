@@ -1,7 +1,5 @@
 package ru.nsu.g.amaseevskii.chat;
 
-import ru.nsu.g.amaseevskii.chat.Serialized.Client;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -10,11 +8,15 @@ import java.awt.event.KeyListener;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class ChatWindow {
-    private final Client client;
-    ChatWindow(Client client) {
+    private final IClient client;
+    private boolean xml;
+
+    ChatWindow(IClient client) {
         this.client = client;
+        xml = false;
         openChat();
     }
+
     private JFrame frame;
     private JTextArea chat;
     private JTextArea users;

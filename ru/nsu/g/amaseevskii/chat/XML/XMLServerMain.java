@@ -1,11 +1,10 @@
-package ru.nsu.g.amaseevskii.chat.Serialized;
+package ru.nsu.g.amaseevskii.chat.XML;
 
 import ru.nsu.g.amaseevskii.chat.ServerWindow;
 
-public class ServerMain {
-
+public class XMLServerMain {
     public static void main(String[] args) {
-        Server server = new Server();
+        XMLServer server = new XMLServer();
         ServerWindow sw = new ServerWindow(server);
         sw.StartServer();
     }
