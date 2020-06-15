@@ -1,24 +1,29 @@
 package ru.nsu.g.amaseevskii.chat.Serialized;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 import static ru.nsu.g.amaseevskii.chat.ServerLogger.serverLogger;
 
 public class ServerWriteThread extends Thread {
-    private String name;
-    private final ArrayList<ObjectOutputStream> objectOutputStreams;
-    private final ArrayList<String> clients;
-    private final ObjectInputStream fromClient;
-    private final ObjectOutputStream toClient;
-    private final ArrayDeque<Message> lastMessages;
-    private final Integer maxLastMessages;
-    private final Socket socket;
-    private final int log;
+    String name;
+    private ArrayList<ObjectOutputStream> objectOutputStreams;
+    private ArrayList<String> clients;
+    private ObjectInputStream fromClient;
+    private ObjectOutputStream toClient;
+    private ArrayDeque<Message> lastMessages;
+    private Integer maxLastMessages;
+    private Timer timeoutTimer;
+    private TimerListener t1;
+    protected int log;
 
     ServerWriteThread(Socket socket, ArrayDeque<Message> lastMessages, ObjectOutputStream toClient,
                       ArrayList<ObjectOutputStream> oos, ArrayList<String> clients, int log) throws IOException {
@@ -28,9 +33,11 @@ public class ServerWriteThread extends Thread {
         this.toClient = toClient;
         this.clients = clients;
         this.log = log;
-        this.socket = socket;
+        t1 = new TimerListener();
+        timeoutTimer = new Timer(1000, t1);
         fromClient = new ObjectInputStream(socket.getInputStream());
         maxLastMessages = 10;
+        timeoutTimer.start();
     }
 
     @Override
@@ -69,29 +76,52 @@ public class ServerWriteThread extends Thread {
                         toClient.writeObject(new Message("User list", userList.toString()));
                         System.out.println("User list sent");
                     }
+                    case "Connection check" -> {}
                 }
-                if (message.getType().equals("Message") || message.getType().equals("Registration"))
+                if (message.getType().equals("Message") || message.getType().equals("Registration") || message.getType().equals("Disconnect by timeout"))
                     synchronized (lastMessages) {
                         lastMessages.add(message);
                         if (lastMessages.size() > maxLastMessages)
                             lastMessages.removeFirst();
                         lastMessages.notify();
                     }
-            } catch (Exception e) {
+                
+            } catch (SocketTimeoutException e1) {
+                if (log == 1)
+                    serverLogger.info(name + " timed out");
+                System.out.println(name + " timed out");
+                message = new Message("Disconnect by timeout", "", name);
+
+                clients.remove(name);
+                objectOutputStreams.remove(toClient);
+                timeoutTimer.stop();
+
                 try {
-                    if (socket.getInetAddress().isReachable(5000)) {
-                        if (log == 1)
-                            serverLogger.info(name + " has left.");
-                        System.out.println(name + " has left.");
-                        message = new Message("Disconnect", "", name);
-                    } else {
-                        if (log == 1)
-                            serverLogger.info(name + " disconnected by timeout");
-                        System.out.println(name + " disconnected by timeout");
-                        message = new Message("Disconnect by timeout", "", name);
+                    fromClient.close();
+                    toClient.close();
+                    synchronized (lastMessages) {
+                        lastMessages.add(message);
+                        if (lastMessages.size() > maxLastMessages)
+                            lastMessages.removeFirst();
+                        lastMessages.notify();
                     }
-                    clients.remove(name);
-                    objectOutputStreams.remove(toClient);
+                } catch (IOException e2) {
+                    System.out.println(e2.getMessage());
+                }
+                currentThread().interrupt();
+                break;
+            }
+            catch (ClassNotFoundException | IOException e) {
+                if (log == 1)
+                    serverLogger.info(name + " has left");
+                System.out.println(name + " has left");
+                message = new Message("Disconnect", "", name);
+
+                clients.remove(name);
+                objectOutputStreams.remove(toClient);
+                timeoutTimer.stop();
+
+                try {
                     fromClient.close();
                     toClient.close();
                     synchronized (lastMessages) {
@@ -105,6 +135,17 @@ public class ServerWriteThread extends Thread {
                 }
                 currentThread().interrupt();
                 break;
+            }
+        }
+    }
+
+    private class TimerListener implements ActionListener {
+        @Override
+        public void actionPerformed(final ActionEvent e) {
+            try {
+                toClient.writeObject(new Message("Connection check", ""));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
             }
         }
     }

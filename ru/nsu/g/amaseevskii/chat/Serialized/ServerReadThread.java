@@ -6,8 +6,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 public class ServerReadThread extends Thread{
-    private final ArrayDeque<Message> lastMessages;
-    private final ArrayList<ObjectOutputStream> objectOutputStreams;
+    private ArrayDeque<Message> lastMessages;
+    private ArrayList<ObjectOutputStream> objectOutputStreams;
 
     ServerReadThread(ArrayDeque<Message> lastMessages, ArrayList<ObjectOutputStream> oos) {
         this.lastMessages = lastMessages;

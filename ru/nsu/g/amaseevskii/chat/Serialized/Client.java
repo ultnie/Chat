@@ -3,6 +3,8 @@ package ru.nsu.g.amaseevskii.chat.Serialized;
 import ru.nsu.g.amaseevskii.chat.IClient;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -15,6 +17,8 @@ public class Client implements IClient {
     private ObjectOutputStream toServer;
     private ClientReadThread reader;
     private ArrayList<String> otherClients;
+    private Timer timeoutTimer;
+    private TimerListener t1;
 
     Client() {
         otherClients = new ArrayList<>();
@@ -23,8 +27,12 @@ public class Client implements IClient {
     public void connect (String ip, Integer port){
         try {
             Socket mySocket = new Socket(ip, port);
+            mySocket.setSoTimeout(5000);
             toServer = new ObjectOutputStream(mySocket.getOutputStream());
             fromServer = new ObjectInputStream(mySocket.getInputStream());
+            t1 = new TimerListener();
+            timeoutTimer = new Timer(1000, t1);
+            timeoutTimer.start();
         } catch (IOException e) {
             System.out.println(e.getMessage());
             throw new ExceptionInInitializerError("Can`t connect!");
@@ -72,6 +80,17 @@ public class Client implements IClient {
             }
             if (!reader.isSuccess()) {
                 throw new ExceptionInInitializerError("Message not delivered!");
+            }
+        }
+    }
+
+    private class TimerListener implements ActionListener {
+        @Override
+        public void actionPerformed(final ActionEvent e) {
+            try {
+                toServer.writeObject(new Message("Connection check", "",clientName));
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
             }
         }
     }

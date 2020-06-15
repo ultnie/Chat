@@ -53,6 +53,7 @@ public class Server {
         ObjectOutputStream oos;
         while (SERVER_IS_ONLINE) {
             Socket socket = mainSocket.accept();
+            socket.setSoTimeout(5000);
             oos = new ObjectOutputStream(socket.getOutputStream());
             streams.add(oos);
             if (log == 1)
@@ -62,5 +63,4 @@ public class Server {
             client.start();
         }
     }
-
 }

@@ -39,7 +39,7 @@ public class ClientReadThread extends Thread {
                         users.setText("");
                         for (String user : otherClients)
                             users.append(user + "\n");
-                        chat.append(message.getSource() + " disconnected by timeout\n");
+                        chat.append(message.getSource() + " timed out\n");
                     case "Success":
                         synchronized (this) {
                             success = true;
@@ -73,6 +73,7 @@ public class ClientReadThread extends Thread {
                             success = true;
                             notify();
                         }
+                    case "Connection check": {}
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
